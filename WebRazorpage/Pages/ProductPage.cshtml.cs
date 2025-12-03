@@ -7,76 +7,102 @@ namespace WebRazorpage.Pages
 {
     public class ProductPageModel : PageModel
     {
-        private readonly QLBHContext _context; // Dùng DbContext thay vì ProductService
+        private readonly QLBHContext _context;
+        private readonly IWebHostEnvironment _env;
 
-        public ProductPageModel(QLBHContext context)
+        public ProductPageModel(QLBHContext context, IWebHostEnvironment env)
         {
             _context = context;
+            _env = env;
         }
 
-        public List<Product> Products { get; set; } = new List<Product>();
-        public Product Product { get; set; }
+        // Danh sách
+        public List<Product> Products { get; set; } = new();
 
-        // Biến phục vụ tìm kiếm và lọc
+        // Chi tiết
+        public Product? Product { get; set; }
+
+        // Form tạo mới
+        [BindProperty]
+        public Product NewProduct { get; set; } = new();
+
+        [BindProperty]
+        public IFormFile? ImageFile { get; set; }
+
+        // Tìm kiếm
         [BindProperty(SupportsGet = true)]
-        public string SearchString { get; set; } // Từ khóa tìm kiếm
+        public string? SearchString { get; set; }
 
+        // Lọc category
         [BindProperty(SupportsGet = true)]
-        public int? CategoryId { get; set; } // ID danh mục cần lọc
+        public int? CategoryId { get; set; }
 
+        // GET
         public async Task OnGetAsync(int? id)
         {
             if (id != null)
             {
-                // Xem chi tiết
                 Product = await _context.Products
-                                        .Include(p => p.Category) // Kèm thông tin danh mục
-                                        .FirstOrDefaultAsync(m => m.Id == id);
-                ViewData["Title"] = $"Chi tiết: {Product?.Name}";
+                    .Include(x => x.Category)
+                    .FirstOrDefaultAsync(x => x.Id == id);
+
+                return;
+            }
+
+            var query = _context.Products.Include(x => x.Category).AsQueryable();
+
+            if (!string.IsNullOrEmpty(SearchString))
+                query = query.Where(x => x.Name.Contains(SearchString));
+
+            if (CategoryId.HasValue)
+                query = query.Where(x => x.CategoryId == CategoryId.Value);
+
+            Products = await query.ToListAsync();
+        }
+
+        // POST (Create)
+        public async Task<IActionResult> OnPostAsync()
+        {
+            // Bỏ Category khỏi validation (tránh lỗi null navigation property)
+            ModelState.Remove("NewProduct.Category");
+
+            if (!ModelState.IsValid)
+            {
+                await LoadProductsAgain();
+                return Page();
+            }
+
+            // Upload ảnh
+            if (ImageFile != null && ImageFile.Length > 0)
+            {
+                string folder = Path.Combine(_env.WebRootPath, "images");
+                Directory.CreateDirectory(folder);
+
+                string fileName = Guid.NewGuid() + Path.GetExtension(ImageFile.FileName);
+                string filePath = Path.Combine(folder, fileName);
+
+                using var stream = new FileStream(filePath, FileMode.Create);
+                await ImageFile.CopyToAsync(stream);
+
+                NewProduct.Image = fileName;
             }
             else
             {
-                // Xem danh sách (Có tìm kiếm và lọc)
-                ViewData["Title"] = "Danh sách sản phẩm";
-
-                // Truy vấn cơ bản
-                var query = _context.Products.Include(p => p.Category).AsQueryable();
-
-                // 1. Lọc theo tên (Tìm kiếm)
-                if (!string.IsNullOrEmpty(SearchString))
-                {
-                    query = query.Where(p => p.Name.Contains(SearchString));
-                }
-
-                // 2. Lọc theo danh mục
-                if (CategoryId.HasValue)
-                {
-                    query = query.Where(p => p.CategoryId == CategoryId);
-                }
-
-                Products = await query.ToListAsync();
+                NewProduct.Image = "no-image.jpg";
             }
+
+            // Lưu DB
+            _context.Products.Add(NewProduct);
+            await _context.SaveChangesAsync();
+
+            return RedirectToPage("./ProductPage");
         }
 
-        // --- Code phần Thêm Mới Sản Phẩm (POST) giữ nguyên logic upload ảnh ---
-        // Chỉ cần thay _productService.Add() bằng _context.Add() và _context.SaveChanges()
-        [BindProperty]
-        public Product NewProduct { get; set; }
-        [BindProperty]
-        public IFormFile ImageFile { get; set; }
-
-        public async Task<IActionResult> OnPostAsync()
+        private async Task LoadProductsAgain()
         {
-            if (NewProduct.Name != null)
-            {
-                // (Giữ nguyên phần code upload ảnh ở bài 6 của bạn tại đây)
-                // ...
-                // Sau khi xử lý ảnh xong:
-
-                _context.Products.Add(NewProduct);
-                await _context.SaveChangesAsync(); // Lưu vào DB
-            }
-            return RedirectToPage("./ProductPage");
+            Products = await _context.Products
+                .Include(x => x.Category)
+                .ToListAsync();
         }
     }
 }
