@@ -1,0 +1,43 @@
+﻿@page "{id:int?}"
+@* Dòng trên định nghĩa Route: id là tham số tùy chọn kiểu int *@
+
+@model WebRazorpage.Pages.ProductPageModel
+@{
+}
+
+<h1 class="text-info">@ViewData["Title"]</h1>
+
+@if (Model.Product != null)
+{
+    // === TRƯỜNG HỢP 1: HIỂN THỊ CHI TIẾT 1 SẢN PHẨM ===
+    <div class="card border-primary mb-3" style="max-width: 20rem;">
+        <div class="card-header">@Model.Product.Name</div>
+        <div class="card-body text-primary">
+            <h5 class="card-title">Giá: @Model.Product.Price</h5>
+            <p class="card-text">@Model.Product.Description</p>
+        </div>
+    </div>
+    <a asp-page="ProductPage" class="btn btn-secondary">Quay lại danh sách</a>
+}
+else
+{
+    // === TRƯỜNG HỢP 2: HIỂN THỊ DANH SÁCH ===
+    <ul class="list-group mb-3">
+        @foreach (var item in Model.Products)
+        {
+            <li class="list-group-item d-flex justify-content-between align-items-center">
+                <a asp-page="ProductPage" asp-route-id="@item.Id">
+                    @item.Name
+                </a>
+                <span class="badge bg-primary rounded-pill">@item.Price</span>
+            </li>
+        }
+    </ul>
+
+    // === CÁC NÚT CHỨC NĂNG (GỌI HANDLER) ===
+    <div class="btn-group" role="group">
+        <a asp-page-handler="RemoveAll" class="btn btn-danger">Xóa tất cả</a>
+        <a asp-page-handler="LoadAll" class="btn btn-success">Nạp lại dữ liệu</a>
+        <a asp-page-handler="LastProduct" class="btn btn-warning">Xem SP cuối</a>
+    </div>
+}
