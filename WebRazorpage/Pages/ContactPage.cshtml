@@ -1,0 +1,59 @@
+﻿@page
+@model WebRazorpage.Pages.ContactPageModel
+@{
+    ViewData["Title"] = "Liên hệ";
+}
+
+<h1 class="display-4">Trang liên hệ</h1>
+<p class="lead">@Model.ThongBao</p>
+<hr />
+
+<div class="row">
+    <div class="col-md-6">
+        <form method="post" class="bg-light p-4 border rounded">
+            <div class="mb-3">
+                <label asp-for="Contact.ContactId" class="form-label"></label>
+                <input asp-for="Contact.ContactId" class="form-control" />
+                <span asp-validation-for="Contact.ContactId" class="text-danger"></span>
+            </div>
+            <div class="mb-3">
+                <label asp-for="Contact.FirstName" class="form-label"></label>
+                <input asp-for="Contact.FirstName" class="form-control" />
+                <span asp-validation-for="Contact.FirstName" class="text-danger"></span>
+            </div>
+            <div class="mb-3">
+                <label asp-for="Contact.LastName" class="form-label"></label>
+                <input asp-for="Contact.LastName" class="form-control" />
+                <span asp-validation-for="Contact.LastName" class="text-danger"></span>
+            </div>
+            <div class="mb-3">
+                <label asp-for="Contact.Email" class="form-label"></label>
+                <input asp-for="Contact.Email" class="form-control" />
+                <span asp-validation-for="Contact.Email" class="text-danger"></span>
+            </div>
+            <div class="mb-3">
+                <label asp-for="Contact.DateOfBirth" class="form-label"></label>
+                <input asp-for="Contact.DateOfBirth" class="form-control" />
+            </div>
+            <button type="submit" class="btn btn-primary">Gửi thông tin</button>
+        </form>
+    </div>
+
+    <div class="col-md-6">
+        @if (Request.Method == "POST" && ModelState.IsValid)
+        {
+            <div class="alert alert-success">
+                <h4>Thông tin đã nhận:</h4>
+                <ul>
+                    <li>ID: @Model.Contact.ContactId</li>
+                    <li>Họ tên: @Model.Contact.LastName @Model.Contact.FirstName</li>
+                    <li>Email: @Model.Contact.Email</li>
+                </ul>
+            </div>
+        }
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

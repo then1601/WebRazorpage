@@ -38,5 +38,13 @@ namespace WebRazorpage.Services
         {
             products.Clear();
         }
+
+        public void Add(Product product)
+        {
+            // Tự động tăng ID
+            int newId = products.Any() ? products.Max(p => p.Id) + 1 : 1;
+            product.Id = newId;
+            products.Add(product);
+        }
     }
 }
