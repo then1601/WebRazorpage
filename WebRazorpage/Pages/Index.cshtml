@@ -1,33 +1,15 @@
 ﻿@page
-@using WebRazorpage.Models
 @model IndexModel
 @{
     ViewData["Title"] = "Home page";
-
-    // Tạo dữ liệu mẫu
-    var product1 = new Product() { Name = "Iphone 14 Pro", Description = "Dien thoai cua Apple", Price = 1000 };
-    var product2 = new Product() { Name = "Samsung Galaxy", Description = "Dien thoai cua Samsung", Price = 500 };
-    var product3 = new Product() { Name = "Sony Xperia", Description = "Dien thoai cua Sony", Price = 800 };
 }
 
 <div class="text-center">
-    <h1 class="display-4">Danh sách sản phẩm</h1>
+    <h1 class="display-4">Danh sách sản phẩm (ViewComponent)</h1>
 </div>
 
-<div class="row">
-    <div class="col">
-        <partial name="_ProductItem" model="product1" />
-    </div>
-    <div class="col">
-        @await Html.PartialAsync("_ProductItem", product2)
-    </div>
-    <div class="col">
-        @{
-            await Html.RenderPartialAsync("_ProductItem", product3);
-        }
-    </div>
-</div>
-@{
-    ViewData["titleContent"] = "Trang san pham"; // Dữ liệu này sẽ hiện trong _Message
-}
-@await Html.PartialAsync("_Message")
+@await Component.InvokeAsync("ProductBox", new { sapxeptang = true })
+
+<hr />
+<h3>Danh sách giá giảm dần:</h3>
+@await Component.InvokeAsync("ProductBox", new { sapxeptang = false })

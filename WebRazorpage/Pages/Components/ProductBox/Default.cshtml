@@ -1,0 +1,11 @@
+﻿@using WebRazorpage.Models
+@model List<Product>
+
+<div class="row">
+    @foreach (var product in Model)
+    {
+        <div class="col-md-4">
+            <partial name="_ProductItem" model="product" />
+        </div>
+    }
+</div>

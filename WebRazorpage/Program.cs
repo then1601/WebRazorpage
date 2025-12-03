@@ -3,6 +3,9 @@ var builder = WebApplication.CreateBuilder(args);
 // Add services to the container.
 builder.Services.AddRazorPages();
 
+// ??NG KÝ SERVICE ? ?ÂY:
+builder.Services.AddSingleton<WebRazorpage.Services.ProductService>();
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
