@@ -1,10 +1,17 @@
+﻿using Microsoft.EntityFrameworkCore;
+using WebRazorpage.Models;
+
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Services.AddRazorPages();
 
-// ??NG K� SERVICE ? ?�Y:
-builder.Services.AddSingleton<WebRazorpage.Services.ProductService>();
+// Đăng ký DB Context
+builder.Services.AddDbContext<QLBHContext>(options =>
+    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+
+// Đăng ký ProductService (nếu cần) - nên dùng Scoped thay vì Singleton
+// builder.Services.AddScoped<ProductService>();
 
 var app = builder.Build();
 

@@ -97,4 +97,15 @@ else
         </div>
         <button type="submit" class="btn btn-primary">Lưu sản phẩm</button>
     </form>
+    <form method="get" class="row g-3 mb-4">
+        <div class="col-auto">
+            <input type="text" name="SearchString" value="@Model.SearchString" class="form-control" placeholder="Tìm tên sản phẩm...">
+        </div>
+        <div class="col-auto">
+            <input type="number" name="CategoryId" value="@Model.CategoryId" class="form-control" placeholder="ID Danh mục">
+        </div>
+        <div class="col-auto">
+            <button type="submit" class="btn btn-primary mb-3">Tìm kiếm</button>
+        </div>
+    </form>
 }
