@@ -16,67 +16,69 @@ namespace WebRazorpage.Pages
             _env = env;
         }
 
-        // Danh sách
+        // Danh sách sản phẩm
         public List<Product> Products { get; set; } = new();
 
-        // Chi tiết
+        // Chi tiết 1 sản phẩm (khi xem)
         public Product? Product { get; set; }
 
-        // Form tạo mới
+        // Form thêm mới
         [BindProperty]
         public Product NewProduct { get; set; } = new();
 
+        // Ảnh upload
         [BindProperty]
         public IFormFile? ImageFile { get; set; }
 
-        // Tìm kiếm
+        // Lọc / tìm kiếm
         [BindProperty(SupportsGet = true)]
         public string? SearchString { get; set; }
 
-        // Lọc category
         [BindProperty(SupportsGet = true)]
         public int? CategoryId { get; set; }
+
+        // Danh sách category cho dropdown
+        public List<Category> Categories { get; set; } = new();
+
 
         // GET
         public async Task OnGetAsync(int? id)
         {
-            if (id != null)
+            // Load dropdown Category
+            Categories = await _context.Categories.ToListAsync();
+
+            // Nếu có id → xem chi tiết
+            if (id.HasValue)
             {
                 Product = await _context.Products
                     .Include(x => x.Category)
                     .FirstOrDefaultAsync(x => x.Id == id);
-
-                return;
             }
 
-            var query = _context.Products.Include(x => x.Category).AsQueryable();
-
-            if (!string.IsNullOrEmpty(SearchString))
-                query = query.Where(x => x.Name.Contains(SearchString));
-
-            if (CategoryId.HasValue)
-                query = query.Where(x => x.CategoryId == CategoryId.Value);
-
-            Products = await query.ToListAsync();
+            // Luôn load danh sách
+            await LoadProductList();
         }
 
-        // POST (Create)
+
+        // POST
         public async Task<IActionResult> OnPostAsync()
         {
-            // Bỏ Category khỏi validation (tránh lỗi null navigation property)
+            // Bỏ validate navigation property
             ModelState.Remove("NewProduct.Category");
 
             if (!ModelState.IsValid)
             {
-                await LoadProductsAgain();
+                Categories = await _context.Categories.ToListAsync();
+                await LoadProductList();
                 return Page();
             }
 
-            // Upload ảnh
+            // Xử lý upload ảnh
             if (ImageFile != null && ImageFile.Length > 0)
             {
                 string folder = Path.Combine(_env.WebRootPath, "images");
-                Directory.CreateDirectory(folder);
+                if (!Directory.Exists(folder))
+                    Directory.CreateDirectory(folder);
 
                 string fileName = Guid.NewGuid() + Path.GetExtension(ImageFile.FileName);
                 string filePath = Path.Combine(folder, fileName);
@@ -84,25 +86,33 @@ namespace WebRazorpage.Pages
                 using var stream = new FileStream(filePath, FileMode.Create);
                 await ImageFile.CopyToAsync(stream);
 
-                NewProduct.Image = fileName;
+                NewProduct.Image = "/images/" + fileName;
             }
             else
             {
-                NewProduct.Image = "no-image.jpg";
+                NewProduct.Image = "/images/no-image.jpg";
             }
 
-            // Lưu DB
             _context.Products.Add(NewProduct);
             await _context.SaveChangesAsync();
 
             return RedirectToPage("./ProductPage");
         }
 
-        private async Task LoadProductsAgain()
+
+        private async Task LoadProductList()
         {
-            Products = await _context.Products
-                .Include(x => x.Category)
-                .ToListAsync();
+            var query = _context.Products.Include(p => p.Category).AsQueryable();
+
+            if (!string.IsNullOrEmpty(SearchString))
+                query = query.Where(x => x.Name.Contains(SearchString));
+
+            if (CategoryId.HasValue)
+                query = query.Where(x => x.CategoryId == CategoryId.Value);
+
+            query = query.OrderByDescending(x => x.Id);
+
+            Products = await query.ToListAsync();
         }
     }
 }

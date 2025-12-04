@@ -9,7 +9,7 @@ builder.Services.AddRazorPages();
 
 // Đăng ký DB Context
 builder.Services.AddDbContext<QLBHContext>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+    options.UseSqlServer(builder.Configuration.GetConnectionString("QLBH")));
 
 // builder.Services.AddScoped<ProductService>();
 

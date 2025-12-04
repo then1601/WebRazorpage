@@ -1,24 +1,11 @@
 ﻿@page "{id:int?}"
-@* Dòng trên định nghĩa Route: id là tham số tùy chọn kiểu int *@
-
 @model WebRazorpage.Pages.ProductPageModel
-@{
-}
 
-<h1 class="text-info">@ViewData["Title"]</h1>
+<h1 class="text-info">Quản lý sản phẩm</h1>
 
+<!-- HIỆN CHI TIẾT SẢN PHẨM -->
 @if (Model.Product != null)
 {
-    // === TRƯỜNG HỢP 1: HIỂN THỊ CHI TIẾT 1 SẢN PHẨM ===
-    <div class="card border-primary mb-3" style="max-width: 20rem;">
-        <div class="card-header">@Model.Product.Name</div>
-        <div class="card-body text-primary">
-            <h5 class="card-title">Giá: @Model.Product.Price</h5>
-            <p class="card-text">@Model.Product.Description</p>
-        </div>
-    </div>
-    <a asp-page="ProductPage" class="btn btn-secondary">Quay lại danh sách</a>
-    // === TRƯỜNG HỢP 1: HIỂN THỊ CHI TIẾT 1 SẢN PHẨM ===
     <div class="card border-primary mb-3" style="max-width: 20rem;">
         <div class="card-header">@Model.Product.Name</div>
 
@@ -30,82 +17,68 @@
         <div class="card-body text-primary">
             <h5 class="card-title">Giá: @Model.Product.Price</h5>
             <p class="card-text">@Model.Product.Description</p>
+            <p>Danh mục: @Model.Product.Category?.Name</p>
         </div>
     </div>
+
+    <a asp-page="ProductPage" class="btn btn-secondary">Quay lại danh sách</a>
 }
 else
 {
-    // === TRƯỜNG HỢP 2: HIỂN THỊ DANH SÁCH ===
+    <!-- DANH SÁCH -->
     <ul class="list-group mb-3">
         @foreach (var item in Model.Products)
         {
             <li class="list-group-item d-flex justify-content-between align-items-center">
                 <div class="d-flex align-items-center">
-                    @if (!string.IsNullOrEmpty(item.Image))
-                    {
-                        <img src="@item.Image" alt="@item.Name"
-                             style="width: 50px; height: 50px; object-fit: cover; margin-right: 15px; border-radius: 4px; border: 1px solid #ddd;" />
-                    }
-                    else
-                    {
-                        <div style="width: 50px; height: 50px; margin-right: 15px; background-color: #eee; border-radius: 4px; display: flex; align-items: center; justify-content: center; font-size: 10px; color: #999;">
-                            No IMG
-                        </div>
-                    }
+                    <img src="@item.Image"
+                         style="width: 50px; height: 50px; object-fit: cover; margin-right: 15px;" />
 
-                    <a asp-page="ProductPage" asp-route-id="@item.Id" class="text-decoration-none text-dark fw-bold">
+                    <a asp-page="ProductPage" asp-route-id="@item.Id"
+                       class="fw-bold text-dark text-decoration-none">
                         @item.Name
                     </a>
                 </div>
 
-                <span class="badge bg-primary rounded-pill">@item.Price $</span>
+                <span class="badge bg-primary rounded-pill">@item.Price</span>
             </li>
         }
     </ul>
 
-    // === CÁC NÚT CHỨC NĂNG (GỌI HANDLER) ===
-    <div class="btn-group" role="group">
-        <a asp-page-handler="RemoveAll" class="btn btn-danger">Xóa tất cả</a>
-        <a asp-page-handler="LoadAll" class="btn btn-success">Nạp lại dữ liệu</a>
-        <a asp-page-handler="LastProduct" class="btn btn-warning">Xem SP cuối</a>
-    </div>
 
-    <hr />
+    <!-- FORM THÊM -->
     <h3>Thêm sản phẩm mới</h3>
-    <form method="post" enctype="multipart/form-data" class="border p-3 bg-light">
+
+    <validation-summary model-only />
+
+    <form method="post" enctype="multipart/form-data" class="border p-3 bg-light rounded">
         <div class="row">
             <div class="col-md-6">
-                <div class="mb-3">
-                    <label>Tên sản phẩm</label>
-                    <input asp-for="NewProduct.Name" class="form-control" required />
-                </div>
-                <div class="mb-3">
-                    <label>Giá</label>
-                    <input asp-for="NewProduct.Price" type="number" class="form-control" />
-                </div>
+                <label class="form-label">Tên sản phẩm</label>
+                <input asp-for="NewProduct.Name" class="form-control" required />
+
+                <label class="form-label mt-3">Giá</label>
+                <input asp-for="NewProduct.Price" type="number" class="form-control" required />
             </div>
+
             <div class="col-md-6">
-                <div class="mb-3">
-                    <label>Mô tả</label>
-                    <textarea asp-for="NewProduct.Description" class="form-control"></textarea>
-                </div>
-                <div class="mb-3">
-                    <label>Ảnh sản phẩm</label>
-                    <input asp-for="ImageFile" type="file" class="form-control" />
-                </div>
+                <label class="form-label">Mô tả</label>
+                <textarea asp-for="NewProduct.Description" class="form-control"></textarea>
+
+                <label class="form-label mt-3">Danh mục</label>
+                <select asp-for="NewProduct.CategoryId" class="form-control">
+                    <option value="">-- Chọn danh mục --</option>
+                    @foreach (var c in Model.Categories)
+                    {
+                        <option value="@c.Id">@c.Name</option>
+                    }
+                </select>
+
+                <label class="form-label mt-3">Ảnh sản phẩm</label>
+                <input asp-for="ImageFile" type="file" class="form-control" />
             </div>
         </div>
-        <button type="submit" class="btn btn-primary">Lưu sản phẩm</button>
-    </form>
-    <form method="get" class="row g-3 mb-4">
-        <div class="col-auto">
-            <input type="text" name="SearchString" value="@Model.SearchString" class="form-control" placeholder="Tìm tên sản phẩm...">
-        </div>
-        <div class="col-auto">
-            <input type="number" name="CategoryId" value="@Model.CategoryId" class="form-control" placeholder="ID Danh mục">
-        </div>
-        <div class="col-auto">
-            <button type="submit" class="btn btn-primary mb-3">Tìm kiếm</button>
-        </div>
+
+        <button type="submit" class="btn btn-primary mt-3">Lưu sản phẩm</button>
     </form>
 }
